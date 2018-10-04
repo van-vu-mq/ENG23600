@@ -17,6 +17,7 @@ String MegaMAC;
 
 UnoBlueTooth::UnoBlueTooth() {
 	connectionStatusPin = 13;
+	MegaMAC = "04B167086527";  // tomy's phone
 }
 
 /*
@@ -43,7 +44,33 @@ void UnoBlueTooth::begin(int baudRate) {
 	@return boolean - true if paired, false if not paired
 */
 boolean UnoBlueTooth::getConnectionStatus(){
+	/*
+		Polls the state pin several times and checks whether it is BLINKING or HIGH.
+		HM-10 BLE module BLINKs every 500ms when not paired. Polling needs to have sufficient fidelity to account for this timing.
+	*/
 	
+  int sPin = -1;  // BLE paired status
+  int stateCount = 15;  // number of times to poll state pin
+  unsigned long stateCheckPeriod = 100; // time (ms) between polls
+
+  unsigned long timePrev = millis();
+  unsigned long timeCur;
+  unsigned long timeLapsed;
+
+  int pollCounter = 0;
+  while (pollCounter < stateCount) {
+    timeCur = millis();
+    timeLapsed = timeCur - timePrev;
+    if (timeLapsed > stateCheckPeriod) {
+      sPin = digitalRead(connectionStatusPin);
+      if (sPin == 0) {
+        return false;
+      }
+      timePrev = millis();
+      pollCounter++;
+    }
+  }
+  return true;	
 }
 
 /*
@@ -161,7 +188,7 @@ String UnoBlueTooth::removeMarker(String data) {
 /************************/
 
 /*
-	@desc 
+	@desc Reads input from Serial Monitor and transmit it through BlueTooth
 	@param
 	@return 
 */
@@ -170,7 +197,7 @@ void UnoBlueTooth::readFromSerial() {
 }
 
 /*
-	@desc 
+	@desc Reads data receieved from BTLE and prints it to Serial Monitor
 	@param
 	@return 
 */
@@ -179,7 +206,7 @@ void UnoBlueTooth::readFromBlueTooth() {
 }
 
 /*
-	@desc 
+	@desc Transmit given data using BlueTooth
 	@param
 	@return 
 */
@@ -188,12 +215,24 @@ void UnoBlueTooth::sendToBlueTooth() {
 }
 
 /*
-	@desc 
-	@param
+	@desc Reads a static array and prints it to Serial Monitor.
+	This function is for testing purposes
+	@param String dataSet[]
+	@param arraySize - the array size to limit memory reading in case where a pointer is passed instead of an array
 	@return 
 */
-void UnoBlueTooth::processArray(String dataSet[], int arraySize) {
-	
+void UnoBlueTooth::readArray(String dataSet[], int arraySize) {
+  for (int i = 0; i < arraySize; i++) {
+    String line = dataSet[i];
+    if (!line.equals(NULL)) {
+      Serial.println(i + ": " + String(dataSet[i]));
+    } else {
+      Serial.println(i+": empty line in array");
+    }
+  }
+  Serial.println("Receiving array test complete.");
+
 }
+
 
 
