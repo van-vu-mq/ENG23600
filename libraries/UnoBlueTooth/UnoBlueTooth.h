@@ -1,11 +1,13 @@
 /*
-Header file for Uno BlueTooth library.
-Outlines the functions implemented in the library.
+	Header file for Uno BlueTooth library.
+	Outlines the functions implemented in the library.
 */
 
 // Handles cases where this library is included more than once.
 #ifndef UnoBlueTooth_h
 #define UnoBlueTooth_h
+
+#include <AltSoftSerial.h>
 
 class UnoBlueTooth {
 	// Functions that are accessible by other programs.
@@ -18,19 +20,20 @@ class UnoBlueTooth {
 		
 		boolean sendData(String data);
 		boolean sendArray(String data[]);
-		String recieveData();		
+		String receiveData();		
 		
 		// Testing functions. These are used to test concepts.
 		// Delete these afterwards to conserve system memory.
 		void readFromSerial();
 		void readFromBlueTooth();
 		void sendToBlueTooth();
-		void readArray(String dataSet[], int arraySize);
+		void processArray(String dataSet[], int arraySize);
 	
 	// Functions that can only be accessed internally by the Uno BlueTooth library.
 	private:
 		AltSoftSerial BTSerial;
 		int connectionStatusPin;
+		String MegaMAC;
 		
 		String encrypt(String data);
 		String decrypt(String data);
@@ -42,5 +45,6 @@ class UnoBlueTooth {
 		boolean confirmCheckSum(byte data);
 		
 		void doATCommandSetup();
-		
-}
+};
+
+#endif
