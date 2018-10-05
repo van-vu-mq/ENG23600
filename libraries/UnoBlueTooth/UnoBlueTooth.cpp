@@ -79,78 +79,108 @@ int UnoBlueTooth::getConnectionStatus() {
   @return
 */
 void UnoBlueTooth::connect() {
+	// TODO
+	// Timeout
+	// merge reading response with other AT functions
+	
+  String res1 = "OK";
+  String res2 = "Set";
+  String response = "";
 
+  BTSerial.print("AT+CON" + MegaMAC);
+
+  response = atResponse();
 }
 
 /*
-  @desc Changes BlueTooth module to become the master
+  @desc executes a predefined set of AT commands
   @param
   @return
 */
 void UnoBlueTooth::doATCommandSetup() {
   if (getConnectionStatus() == 0) {
-		changeRole(1);
-		changeName("Uno");
+    changeRole(1);
+    changeName("Uno");
   } else {
-	Serial.print("Error.\nBlueTooth is currently paired, unable to perform AT commands");
+    Serial.println("Error.\nBlueTooth is currently paired, unable to perform AT commands");
   }
-
-
 }
 
+/*
+  @desc Change the name of the BLE 
+  @param String name
+  @return
+*/
 void UnoBlueTooth::changeName(String name) {
-	String res1 = "OK";
-	String res2 = "Set";
-	String response = "";
-	//unsigned long timeout = 10 000;
+  // TODO
+  // Timeout
+  // merge reading response with other AT functions
 	
-	BTSerial.print("AT+NAME"+name);
-	
-	response = atResponse();
-	if (response.indexOf(res1) > -1) {
-		if (response.indexOf(res2) > -1) {
-			if (response.indexOf(name) > -1) {
-				Serial.println("BLE name changed to " + name);
-			}
-		}
-	}
+  String res1 = "OK";
+  String res2 = "Set";
+  String response = "";
+
+  BTSerial.print("AT+NAME" + name);
+
+  response = atResponse();
+  if (response.indexOf(res1) > -1) {
+    if (response.indexOf(res2) > -1) {
+      if (response.indexOf(name) > -1) {
+        Serial.println("BLE name changed to " + name);
+      }
+    }
+  }
 }
 
+/*
+  @desc Changes the role of the BLE
+  @param int role. 0=slave, 1=master
+  @return
+*/
 void UnoBlueTooth::changeRole(int role) {
-	String res1 = "OK";
-	String res2 = "Set";
-	String response = "";
-	String r = "error";
-	if (role == 0) {
-		r = "slave";
-	} else if (role == 1){
-		r = "master";
-	}
-	//unsigned long timeout = 10 000;
-
-	BTSerial.print("AT+ROLE"+String(role));
+	// TODO
+	// Timeout
+	// merge reading response with other AT functions
 	
-	response = atResponse();
-	
-	if (response.indexOf(res1) > -1) {
-		if (response.indexOf(res2) > -1) {
-			if (response.indexOf(String(role)) > -1) {
-				Serial.println("BLE role changed to " + r);
-			}
-		}
-	}
-} 
+  String res1 = "OK";
+  String res2 = "Set";
+  String response = "";
+  String r = "error";
+  if (role == 0) {
+    r = "slave";
+  } else if (role == 1) {
+    r = "master";
+  }
+  //unsigned long timeout = 10 000;
 
+  BTSerial.print("AT+ROLE" + String(role));
+
+  response = atResponse();
+
+  if (response.indexOf(res1) > -1) {
+    if (response.indexOf(res2) > -1) {
+      if (response.indexOf(String(role)) > -1) {
+        Serial.println("BLE role changed to " + r);
+      }
+    }
+  }
+}
+
+/*
+  @desc Listens on the AltSoftSerial ports for a response. Reads response into a string.
+  @param
+  @return String - response
+*/
 String UnoBlueTooth::atResponse() {
-	String response = "";
-	while(!BTSerial.available()) {}
-	delay(150);
-	while (BTSerial.available()) {
-		char c = BTSerial.read();
-		response.concat(c);
-	}	
-	Serial.println(response);
-	return response;
+  String response = "";
+  while (!BTSerial.available()) {}
+  delay(150);
+  while (BTSerial.available()) {
+    char c = BTSerial.read();
+    response.concat(c);
+  }
+  Serial.println(response);
+  return response;
 }
 
 
@@ -246,7 +276,7 @@ String UnoBlueTooth::removeMarker(String data) {
 
 
 /************************/
-/*    Test      */
+/*    	Test      		*/
 /************************/
 
 /*
@@ -255,12 +285,12 @@ String UnoBlueTooth::removeMarker(String data) {
   @return
 */
 void UnoBlueTooth::readFromSerialToBT() {
-	char c;
-	if (Serial.available()) {
-		c = Serial.read();
-		BTSerial.print(c);
-		Serial.print(c);
-	} 
+  char c;
+  if (Serial.available()) {
+    c = Serial.read();
+    BTSerial.print(c);
+    Serial.print(c);
+  }
 }
 
 /*
