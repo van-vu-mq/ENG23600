@@ -32,7 +32,8 @@ class UnoBlueTooth {
     void readFromSerialToBT();
     void readFromBlueTooth();
     void readArray(String dataSet[], int arraySize);
-	void readArrayFromPointer(String* data, int size);
+	void readArrayFromPointer(String *data, int size);
+	void sampleCheckSum();
 	
 
     // Functions that can only be accessed internally by the Uno BlueTooth library.

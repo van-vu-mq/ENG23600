@@ -1,5 +1,6 @@
 #include <UnoBlueTooth.h>
 
+
 UnoBlueTooth conn; // BlueTooth connection
 
 // Used to periodically check BlueTooth connection status
@@ -18,6 +19,7 @@ void setup() {
 
   String *pointer = &dataSet[0];
   //conn.readArrayFromPointer(pointer, arraySize);
+  conn.sampleCheckSum();
 }
 
 void loop() {

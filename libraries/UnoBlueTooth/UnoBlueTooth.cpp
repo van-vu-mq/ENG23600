@@ -5,6 +5,7 @@
 
 #include <AltSoftSerial.h>
 #include <UnoBlueTooth.h>
+#include <CRC32.h>
 
 AltSoftSerial BTSerial;
 int connectionStatusPin;
@@ -287,6 +288,7 @@ String UnoBlueTooth::removeMarker(String data) {
 
 /************************/
 /*    	Test      		*/
+/* 		TO BE DELETED 	*/
 /************************/
 
 /*
@@ -337,6 +339,12 @@ void UnoBlueTooth::readArray(String dataSet[], int arraySize) {
 
 }
 
+/*
+  @desc Reads and prints out data of an array from given pointer
+  @param *data - pointer to the array
+  @param arraySize 
+  @return
+*/
 void UnoBlueTooth::readArrayFromPointer(String *data, int arraySize) {
   Serial.println("\nReceiving array pointer test starting...");
   for (int i = 0; i < arraySize; i++) {
@@ -350,8 +358,38 @@ void UnoBlueTooth::readArrayFromPointer(String *data, int arraySize) {
   Serial.println("Receiving array pointer test complete.");
 }
 
-
-
+/*
+  @desc Calculate checksum for static data. 
+  Example of how to use the CRC32 library
+  @param
+  @return
+*/
+void UnoBlueTooth::sampleCheckSum() {
+	// Checksum of "Hello World"
+	// Use to compare the function output.
+	const uint32_t KNOWN_CHECKSUM = 0x4A17B156;	
+	
+	// Data to calculate checksum
+	uint8_t byteBuffer[] = "Hello World";
+	size_t numBytes = sizeof(byteBuffer) - 1;
+	
+	// Checksum library instance.
+	CRC32 crc;
+	
+	// store calculated checksum
+	uint32_t checksum;
+	
+	// calculate checksum for the entire buffer at once
+	checksum = crc.calculate(byteBuffer, numBytes);
+	
+	// print out to compare
+	Serial.println("Known checksum: 	" + String(KNOWN_CHECKSUM));
+	Serial.println("Generated checksum:	" + String(checksum));
+	Serial.println("\nCheckSums as HEX");
+	Serial.println(KNOWN_CHECKSUM, HEX);
+	Serial.println(checksum, HEX);
+	
+}
 
 
 
