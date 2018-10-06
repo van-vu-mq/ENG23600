@@ -177,7 +177,12 @@ String UnoBlueTooth::atResponse() {
   unsigned long timeLapsed;
   
   while (!BTSerial.available()) {
-
+	  timeCur = millis();
+	  timeLapsed = timeCur-timeStart;
+	  if (timeLapsed > timeout) {
+		  Serial.println("AT Response Timeout");
+		  return "Timeout";
+	  }
   }
   delay(150);
   while (BTSerial.available()) {
