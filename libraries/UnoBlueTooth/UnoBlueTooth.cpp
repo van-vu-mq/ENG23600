@@ -12,7 +12,7 @@ String MegaMAC;
 
 
 /************************/
-/*    Initialize    */
+/*    Initialize    	*/
 /************************/
 
 UnoBlueTooth::UnoBlueTooth() {
@@ -100,7 +100,7 @@ void UnoBlueTooth::connect() {
 void UnoBlueTooth::doATCommandSetup() {
   if (getConnectionStatus() == 0) {
     changeRole(1);
-    changeName("Uno");
+    changeName("UnoCommsF");
   } else {
     Serial.println("Error.\nBlueTooth is currently paired, unable to perform AT commands");
   }
@@ -151,8 +151,6 @@ void UnoBlueTooth::changeRole(int role) {
   } else if (role == 1) {
     r = "master";
   }
-  //unsigned long timeout = 10 000;
-
   BTSerial.print("AT+ROLE" + String(role));
 
   response = atResponse();
@@ -173,11 +171,18 @@ void UnoBlueTooth::changeRole(int role) {
 */
 String UnoBlueTooth::atResponse() {
   String response = "";
-  while (!BTSerial.available()) {}
+  unsigned long timeout = 2000;
+  unsigned long timeStart = millis();
+  unsigned long timeCur;
+  unsigned long timeLapsed;
+  
+  while (!BTSerial.available()) {
+
+  }
   delay(150);
   while (BTSerial.available()) {
     char c = BTSerial.read();
-    response.concat(c);
+    response.concat(c);	
   }
   Serial.println(response);
   return response;
@@ -185,7 +190,7 @@ String UnoBlueTooth::atResponse() {
 
 
 /************************/
-/*    Transmit    */
+/*    	Transmit    	*/
 /************************/
 
 /*
@@ -234,7 +239,7 @@ byte UnoBlueTooth::addCheckSum(byte data) {
 }
 
 /************************/
-/*    Receive     */
+/*   	 Receive    	*/
 /************************/
 
 /*
@@ -318,7 +323,7 @@ void UnoBlueTooth::readArray(String dataSet[], int arraySize) {
   for (int i = 0; i < arraySize; i++) {
     String line = dataSet[i];
     if (!line.equals(NULL)) {
-      Serial.println(String(i) + ": " + String(dataSet[i]));
+      Serial.println(String(i) + ": " + line);
     } else {
       Serial.println(String(i) + ": empty line in array");
     }
@@ -326,6 +331,30 @@ void UnoBlueTooth::readArray(String dataSet[], int arraySize) {
   Serial.println("Receiving array test complete.");
 
 }
+
+void UnoBlueTooth::readArrayFromPointer(String *data, int arraySize) {
+  Serial.println("\nReceiving array pointer test starting...");
+  for (int i = 0; i < arraySize; i++) {
+	String line = *(data + i);
+    if (!line.equals(NULL)) {
+      Serial.println(String(i) + ": " + line);
+    } else {
+      Serial.println(String(i) + ": empty line in array");
+    }
+  }
+  Serial.println("Receiving array pointer test complete.");
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 

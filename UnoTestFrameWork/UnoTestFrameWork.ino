@@ -12,8 +12,12 @@ void setup() {
   conn.begin(9600); // Initialise
 
   // Example of handing arrays passed to a function in the library.
-  String dataSet[10] = {"one", "two", "three", "four", "special"};
-  conn.readArray(dataSet, 10);
+  int arraySize = 10;
+  String dataSet[arraySize] = {"one", "two", "three", "four", "special"};
+  //conn.readArray(dataSet, arraySize);
+
+  String *pointer = &dataSet[0];
+  //conn.readArrayFromPointer(pointer, arraySize);
 }
 
 void loop() {
