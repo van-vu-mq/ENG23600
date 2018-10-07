@@ -265,7 +265,7 @@ String UnoBlueTooth::receiveData() {
 	String data = "";
   	if (BTSerial.available()) {
     		c = BTSerial.read();
-    		data.write(c);
+    		data.concat(c);
 	}
 	return data;
 }
