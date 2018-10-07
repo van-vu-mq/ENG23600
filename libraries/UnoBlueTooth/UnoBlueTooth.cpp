@@ -300,11 +300,7 @@ String UnoBlueTooth::removeMarker(String data) {
 	if(confirmCheckSum(data)){
 	while(i<data.length()){
 		if(data.charAt(i) !="<" && data.charAt(i) !=">" && data.charAt(i) !="%"){
-<<<<<<< HEAD
 			t.write(data.charAt(i));
-=======
-			//t.write(data.charAt(i));
->>>>>>> parent of abd20a5... Merge branch 'master' of https://github.com/van-vu-mq/ENG23600
 			i++;
 		}
 	}
