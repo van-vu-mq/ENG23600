@@ -265,7 +265,7 @@ String UnoBlueTooth::receiveData() {
 	String data = "";
   	if (BTSerial.available()) {
     		c = BTSerial.read();
-    		data.concat(c);
+    		data.write(c);
 	}
 	return data;
 }
@@ -296,25 +296,14 @@ boolean UnoBlueTooth::confirmCheckSum(String data) {
 */
 String UnoBlueTooth::removeMarker(String data) {
 	String t = "";
-	String data = "";
-	data = data.receiveData();
-	data = decrypt(data);
 	int i=0;
 	if(confirmCheckSum(data)){
-<<<<<<< HEAD
 	while(i<data.length()){
 		if(data.charAt(i) !="<" && data.charAt(i) !=">" && data.charAt(i) !="%"){
 			//t.write(data.charAt(i));
-=======
-		while(i<data.length()){
-			if(data.charAt(i)!='<' && data.charAt(i)!='>' && data.charAt(i)!='%'){
-				t.concat(data.charAt(i));
-			}
->>>>>>> 1e1afad66e39758d0a655eb4925b8da96dd37bda
 			i++;
 		}
 	}
-	return t;
 }
 
 
