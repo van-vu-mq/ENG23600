@@ -296,14 +296,19 @@ boolean UnoBlueTooth::confirmCheckSum(byte data) {
 */
 String UnoBlueTooth::removeMarker(String data) {
 	String t = "";
+	String data = "";
+	data = data.receiveData();
+	data = decrypt(data);
 	int i=0;
 	if(confirmCheckSum(data)){
-	while(i<data.length()){
-		if(data.charAt(i) !="<" && data.charAt(i) !=">" && data.charAt(i) !="%"){
-			t.write(data.charAt(i));
+		while(i<data.length()){
+			if(data.charAt(i)!='<' && data.charAt(i)!='>' && data.charAt(i)!='%'){
+				t.concat(data.charAt(i));
+			}
 			i++;
 		}
 	}
+	return t;
 }
 
 
