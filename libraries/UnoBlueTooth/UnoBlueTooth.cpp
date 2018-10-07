@@ -254,7 +254,13 @@ byte UnoBlueTooth::addCheckSum(byte data) {
   @return String - the data after processing
 */
 String UnoBlueTooth::receiveData() {
-
+	char c;
+	String data = "";
+  	if (BTSerial.available()) {
+    		c = BTSerial.read();
+    		data.write(c);
+	}
+	return data;
 }
 
 /*
@@ -282,7 +288,15 @@ boolean UnoBlueTooth::confirmCheckSum(byte data) {
   @return String - data without markers
 */
 String UnoBlueTooth::removeMarker(String data) {
-
+	String t = "";
+	int i=0;
+	if(confirmCheckSum(data)){
+	while(i<data.length()){
+		if(data.charAt(i) !="<" && data.charAt(i) !=">" && data.charAt(i) !="%"){
+			t.write(data.charAt(i));
+			i++;
+		}
+	}
 }
 
 
