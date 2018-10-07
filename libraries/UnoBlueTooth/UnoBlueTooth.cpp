@@ -99,11 +99,9 @@ void UnoBlueTooth::connect() {
   @return
 */
 void UnoBlueTooth::doATCommandSetup() {
-  if (getConnectionStatus() == 0) {
+  if (canDoAT()) {
     changeRole(1);
     changeName("UnoCommsF");
-  } else {
-    Serial.println("Error.\nBlueTooth is currently paired, unable to perform AT commands");
   }
 }
 
@@ -113,23 +111,14 @@ void UnoBlueTooth::doATCommandSetup() {
   @return
 */
 void UnoBlueTooth::changeName(String name) {
-  // TODO
-  // Timeout
-  // merge reading response with other AT functions
-	
-  String res1 = "OK";
-  String res2 = "Set";
+  int flagCount = 3;
+  String successFlags[flagCount] = {"OK", "Set", name};
   String response = "";
-
   BTSerial.print("AT+NAME" + name);
 
   response = atResponse();
-  if (response.indexOf(res1) > -1) {
-    if (response.indexOf(res2) > -1) {
-      if (response.indexOf(name) > -1) {
-        Serial.println("BLE name changed to " + name);
-      }
-    }
+  if (isATSucessfull(response, &successFlags[0], flagCount)) {
+    Serial.println("BLE name changed to " + name);
   }
 }
 
@@ -139,30 +128,35 @@ void UnoBlueTooth::changeName(String name) {
   @return
 */
 void UnoBlueTooth::changeRole(int role) {
-	// TODO
-	// Timeout
-	// merge reading response with other AT functions
-	
-  String res1 = "OK";
-  String res2 = "Set";
+  int flagCount = 3;
+  String successFlags[flagCount] = {"OK", "Set", String(role)};
   String response = "";
   String r = "error";
-  if (role == 0) {
-    r = "slave";
-  } else if (role == 1) {
-    r = "master";
-  }
+  
+  if (role == 0) 		{ r = "slave" ;} 
+  else if (role == 1) 	{ r = "master";}
+  
   BTSerial.print("AT+ROLE" + String(role));
-
   response = atResponse();
 
-  if (response.indexOf(res1) > -1) {
-    if (response.indexOf(res2) > -1) {
-      if (response.indexOf(String(role)) > -1) {
-        Serial.println("BLE role changed to " + r);
-      }
-    }
+  if (isATSucessfull(response, &successFlags[0], flagCount)) {
+    Serial.println("BLE role changed to " + r);
   }
+}
+
+/*
+  @desc Check that the given response string contains all the given success
+  @param String response - reponse given by AT commands
+  @param String successFlags[]
+  @return boolean - whether all flags are found in the response
+*/
+boolean UnoBlueTooth::isATSucessfull(String response, String *successFlags, int numFlags) {
+	for (int index=0; index<numFlags; index++) {
+		if (response.indexOf(*(successFlags+index)) == -1) {
+			return false;
+		}
+	}
+	return true;
 }
 
 /*
@@ -171,18 +165,17 @@ void UnoBlueTooth::changeRole(int role) {
   @return String - response
 */
 String UnoBlueTooth::atResponse() {
+	
+  if (!canDoAT()) { return "ERROR"; }
+  
   String response = "";
   unsigned long timeout = 2000;
   unsigned long timeStart = millis();
-  unsigned long timeCur;
-  unsigned long timeLapsed;
   
   while (!BTSerial.available()) {
-	  timeCur = millis();
-	  timeLapsed = timeCur-timeStart;
-	  if (timeLapsed > timeout) {
+	  if ((millis() - timeStart) > timeout) {
 		  Serial.println("AT Response Timeout");
-		  return "Timeout";
+		  return "TIMEOUT";
 	  }
   }
   delay(150);
@@ -190,8 +183,22 @@ String UnoBlueTooth::atResponse() {
     char c = BTSerial.read();
     response.concat(c);	
   }
-  Serial.println(response);
+  Serial.println("\n"+response);
   return response;
+}
+
+/*
+  @desc 
+  @param
+  @return
+*/
+boolean UnoBlueTooth::canDoAT() {
+	if (getConnectionStatus() == 0) {
+		return true;
+	} else {
+		Serial.println("Error.\nBlueTooth is currently paired, unable to perform AT commands");
+		return false;
+	}
 }
 
 

@@ -58,6 +58,8 @@ class UnoBlueTooth {
     // uncategorised
     void doATCommandSetup();
     String atResponse();
+	boolean canDoAT();
+	boolean isATSucessfull(String response, String *sucessFlags, int numFlags);
 };
 
 #endif
