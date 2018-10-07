@@ -52,8 +52,8 @@ class UnoBlueTooth {
     String removeMarker(String data);
 
     // error detection / correction
-    byte addCheckSum(byte data);
-    boolean confirmCheckSum(byte data);
+    String addCheckSum(String data);
+    boolean confirmCheckSum(String data);
 
     // uncategorised
     void doATCommandSetup();

@@ -247,7 +247,7 @@ String UnoBlueTooth::addMarker(String data) {
   @param byte data - encrypted data in byte format
   @return byte - data with checksum bits
 */
-byte UnoBlueTooth::addCheckSum(byte data) {
+String UnoBlueTooth::addCheckSum(String data) {
 
 }
 
@@ -285,7 +285,7 @@ String UnoBlueTooth::decrypt(String data) {
   @return boolean - TRUE if data and checksum matches
   @return boolean - FALSE if data and checksum does not match
 */
-boolean UnoBlueTooth::confirmCheckSum(byte data) {
+boolean UnoBlueTooth::confirmCheckSum(String data) {
 
 }
 
@@ -300,7 +300,7 @@ String UnoBlueTooth::removeMarker(String data) {
 	if(confirmCheckSum(data)){
 	while(i<data.length()){
 		if(data.charAt(i) !="<" && data.charAt(i) !=">" && data.charAt(i) !="%"){
-			t.write(data.charAt(i));
+			//t.write(data.charAt(i));
 			i++;
 		}
 	}
