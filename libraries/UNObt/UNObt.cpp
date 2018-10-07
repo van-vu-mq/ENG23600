@@ -4,7 +4,7 @@
 */
 
 #include <AltSoftSerial.h>
-#include <UnoBlueTooth.h>
+#include <UNObt.h>
 #include <CRC32.h>
 
 AltSoftSerial BTSerial;
@@ -16,7 +16,7 @@ String MegaMAC;
 /*    Initialize    	*/
 /************************/
 
-UnoBlueTooth::UnoBlueTooth() {
+UNObt::UNObt() {
   connectionStatusPin = 13;
   MegaMAC = "04B167086527";  // tomy's phone
 }
@@ -26,7 +26,7 @@ UnoBlueTooth::UnoBlueTooth() {
   @param int baudRate
   @return
 */
-void UnoBlueTooth::begin(int baudRate) {
+void UNObt::begin(int baudRate) {
   pinMode(connectionStatusPin, INPUT);
   Serial.begin(baudRate);
   while (!Serial);
@@ -44,7 +44,7 @@ void UnoBlueTooth::begin(int baudRate) {
   @param
   @return boolean - true if paired, false if not paired
 */
-int UnoBlueTooth::getConnectionStatus() {
+int UNObt::getConnectionStatus() {
   /*
     Polls the state pin several times and checks whether it is BLINKING or HIGH.
     HM-10 BLE module BLINKs every 500ms when not paired. Polling needs to have sufficient fidelity to account for this timing.
@@ -79,7 +79,7 @@ int UnoBlueTooth::getConnectionStatus() {
   @param
   @return
 */
-void UnoBlueTooth::connect() {
+void UNObt::connect() {
 	// TODO
 	// Timeout
 	// merge reading response with other AT functions
@@ -98,10 +98,12 @@ void UnoBlueTooth::connect() {
   @param
   @return
 */
-void UnoBlueTooth::doATCommandSetup() {
-  if (canDoAT()) {
+void UNObt::doATCommandSetup() {
+  if (getConnectionStatus() == 0) {
     changeRole(1);
     changeName("UnoCommsF");
+  } else {
+    Serial.println("Error.\nBlueTooth is currently paired, unable to perform AT commands");
   }
 }
 
@@ -110,15 +112,24 @@ void UnoBlueTooth::doATCommandSetup() {
   @param String name
   @return
 */
-void UnoBlueTooth::changeName(String name) {
-  int flagCount = 3;
-  String successFlags[flagCount] = {"OK", "Set", name};
+void UNObt::changeName(String name) {
+  // TODO
+  // Timeout
+  // merge reading response with other AT functions
+	
+  String res1 = "OK";
+  String res2 = "Set";
   String response = "";
+
   BTSerial.print("AT+NAME" + name);
 
   response = atResponse();
-  if (isATSucessfull(response, &successFlags[0], flagCount)) {
-    Serial.println("BLE name changed to " + name);
+  if (response.indexOf(res1) > -1) {
+    if (response.indexOf(res2) > -1) {
+      if (response.indexOf(name) > -1) {
+        Serial.println("BLE name changed to " + name);
+      }
+    }
   }
 }
 
@@ -127,36 +138,31 @@ void UnoBlueTooth::changeName(String name) {
   @param int role. 0=slave, 1=master
   @return
 */
-void UnoBlueTooth::changeRole(int role) {
-  int flagCount = 3;
-  String successFlags[flagCount] = {"OK", "Set", String(role)};
+void UNObt::changeRole(int role) {
+	// TODO
+	// Timeout
+	// merge reading response with other AT functions
+	
+  String res1 = "OK";
+  String res2 = "Set";
   String response = "";
   String r = "error";
-  
-  if (role == 0) 		{ r = "slave" ;} 
-  else if (role == 1) 	{ r = "master";}
-  
+  if (role == 0) {
+    r = "slave";
+  } else if (role == 1) {
+    r = "master";
+  }
   BTSerial.print("AT+ROLE" + String(role));
+
   response = atResponse();
 
-  if (isATSucessfull(response, &successFlags[0], flagCount)) {
-    Serial.println("BLE role changed to " + r);
+  if (response.indexOf(res1) > -1) {
+    if (response.indexOf(res2) > -1) {
+      if (response.indexOf(String(role)) > -1) {
+        Serial.println("BLE role changed to " + r);
+      }
+    }
   }
-}
-
-/*
-  @desc Check that the given response string contains all the given success
-  @param String response - reponse given by AT commands
-  @param String successFlags[]
-  @return boolean - whether all flags are found in the response
-*/
-boolean UnoBlueTooth::isATSucessfull(String response, String *successFlags, int numFlags) {
-	for (int index=0; index<numFlags; index++) {
-		if (response.indexOf(*(successFlags+index)) == -1) {
-			return false;
-		}
-	}
-	return true;
 }
 
 /*
@@ -164,18 +170,19 @@ boolean UnoBlueTooth::isATSucessfull(String response, String *successFlags, int 
   @param
   @return String - response
 */
-String UnoBlueTooth::atResponse() {
-	
-  if (!canDoAT()) { return "ERROR"; }
-  
+String UNObt::atResponse() {
   String response = "";
   unsigned long timeout = 2000;
   unsigned long timeStart = millis();
+  unsigned long timeCur;
+  unsigned long timeLapsed;
   
   while (!BTSerial.available()) {
-	  if ((millis() - timeStart) > timeout) {
+	  timeCur = millis();
+	  timeLapsed = timeCur-timeStart;
+	  if (timeLapsed > timeout) {
 		  Serial.println("AT Response Timeout");
-		  return "TIMEOUT";
+		  return "Timeout";
 	  }
   }
   delay(150);
@@ -183,22 +190,8 @@ String UnoBlueTooth::atResponse() {
     char c = BTSerial.read();
     response.concat(c);	
   }
-  Serial.println("\n"+response);
+  Serial.println(response);
   return response;
-}
-
-/*
-  @desc 
-  @param
-  @return
-*/
-boolean UnoBlueTooth::canDoAT() {
-	if (getConnectionStatus() == 0) {
-		return true;
-	} else {
-		Serial.println("Error.\nBlueTooth is currently paired, unable to perform AT commands");
-		return false;
-	}
 }
 
 
@@ -211,7 +204,7 @@ boolean UnoBlueTooth::canDoAT() {
   @param String data - message to be sent
   @return boolean - success  or failure to send or be recieved by paired device.
 */
-boolean UnoBlueTooth::sendData(String data) {
+boolean UNObt::sendData(String data) {
 
 }
 
@@ -220,7 +213,7 @@ boolean UnoBlueTooth::sendData(String data) {
   @param String data[] - array of message to be sent
   @return boolean - success  or failure to send or be recieved by paired device.
 */
-boolean UnoBlueTooth::sendArray(String data[]) {
+boolean UNObt::sendArray(String data[]) {
 
 }
 
@@ -229,7 +222,7 @@ boolean UnoBlueTooth::sendArray(String data[]) {
   @param String data
   @return String - the data in encrypted form
 */
-String UnoBlueTooth::encrypt(String data) {
+String UNObt::encrypt(String data) {
 
 }
 
@@ -238,7 +231,7 @@ String UnoBlueTooth::encrypt(String data) {
   @param String data
   @return String - data with added markers
 */
-String UnoBlueTooth::addMarker(String data) {
+String UNObt::addMarker(String data) {
 
 }
 
@@ -247,7 +240,7 @@ String UnoBlueTooth::addMarker(String data) {
   @param byte data - encrypted data in byte format
   @return byte - data with checksum bits
 */
-byte UnoBlueTooth::addCheckSum(byte data) {
+String UNObt::addCheckSum(String data) {
 
 }
 
@@ -260,14 +253,56 @@ byte UnoBlueTooth::addCheckSum(byte data) {
   @param
   @return String - the data after processing
 */
-String UnoBlueTooth::receiveData() {
-	char c;
-	String data = "";
-  	if (BTSerial.available()) {
-    		c = BTSerial.read();
-    		data.write(c);
+String UNObt::receiveData() {
+	// start/end markers : packet, data, line
+	char markerSet[] = {'<','>','!','@','#','$'};
+	
+	// read from BT buffer
+	String packet = readFromBTBuffer(markerSet[0], markerSet[1]);
+
+	// Failed to read
+	if (packet.equals("TIMEOUT")) {	return packet; }
+	
+	if (confirmCheckSum(packet)) {
+		packet = removeCheckSum(packet);
 	}
-	return data;
+	
+	
+}
+
+String UNObt::readFromBTBuffer(char packetStart, char packetEnd) {
+	// no incomming data
+	if (!BTSerial.available() > 0) { return ""; }
+	
+	unsigned long timeout = 3000;
+	unsigned long timePrev = millis();
+	
+	boolean packerMarkerFound = false;
+	String incomingPacket = "";
+	char c = ' ';
+	
+	// read until start of packet marker is found
+	while (c != packetStart) {
+		if (timePrev-millis() > timeout) {
+			return "TIMEOUT";
+		}
+		if (BTSerial.available() > 0) {
+			c = BTSerial.read();
+			timePrev = millis();
+		}
+	}
+	
+	incomingPacket.concat(c);
+	// read until end of packet marker is found
+	while (c != packetEnd) {	
+		if (BTSerial.available() > 0) {
+			BTSerial.read();
+			incomingPacket.concat(c);
+			timePrev = millis();
+		}
+	}
+	
+	return incomingPacket;
 }
 
 /*
@@ -275,7 +310,7 @@ String UnoBlueTooth::receiveData() {
   @param String data - encrypted datas
   @return String - unencrypted data
 */
-String UnoBlueTooth::decrypt(String data) {
+String UNObt::decrypt(String data) {
 
 }
 
@@ -285,7 +320,7 @@ String UnoBlueTooth::decrypt(String data) {
   @return boolean - TRUE if data and checksum matches
   @return boolean - FALSE if data and checksum does not match
 */
-boolean UnoBlueTooth::confirmCheckSum(byte data) {
+boolean UNObt::confirmCheckSum(String data) {
 
 }
 
@@ -294,20 +329,8 @@ boolean UnoBlueTooth::confirmCheckSum(byte data) {
   @param String data - data that contains markers
   @return String - data without markers
 */
-String UnoBlueTooth::removeMarker(String data) {
-	String t = "";
-	int i=0;
-	if(confirmCheckSum(data)){
-	while(i<data.length()){
-		if(data.charAt(i) !="<" && data.charAt(i) !=">" && data.charAt(i) !="%"){
-<<<<<<< HEAD
-			t.write(data.charAt(i));
-=======
-			//t.write(data.charAt(i));
->>>>>>> parent of abd20a5... Merge branch 'master' of https://github.com/van-vu-mq/ENG23600
-			i++;
-		}
-	}
+String UNObt::removeMarker(String data) {
+
 }
 
 
@@ -321,7 +344,7 @@ String UnoBlueTooth::removeMarker(String data) {
   @param
   @return
 */
-void UnoBlueTooth::readFromSerialToBT() {
+void UNObt::readFromSerialToBT() {
   char c;
   if (Serial.available()) {
     c = Serial.read();
@@ -335,7 +358,7 @@ void UnoBlueTooth::readFromSerialToBT() {
   @param
   @return
 */
-void UnoBlueTooth::readFromBlueTooth() {
+void UNObt::readFromBlueTooth() {
   char c;
   if (BTSerial.available()) {
     c = BTSerial.read();
@@ -350,7 +373,7 @@ void UnoBlueTooth::readFromBlueTooth() {
   @param arraySize - the array size to limit memory reading in case where a pointer is passed instead of an array
   @return
 */
-void UnoBlueTooth::readArray(String dataSet[], int arraySize) {
+void UNObt::readArray(String dataSet[], int arraySize) {
   Serial.println("\nReceiving array test starting...");
   for (int i = 0; i < arraySize; i++) {
     String line = dataSet[i];
@@ -370,7 +393,7 @@ void UnoBlueTooth::readArray(String dataSet[], int arraySize) {
   @param arraySize 
   @return
 */
-void UnoBlueTooth::readArrayFromPointer(String *data, int arraySize) {
+void UNObt::readArrayFromPointer(String *data, int arraySize) {
   Serial.println("\nReceiving array pointer test starting...");
   for (int i = 0; i < arraySize; i++) {
 	String line = *(data + i);
@@ -389,7 +412,7 @@ void UnoBlueTooth::readArrayFromPointer(String *data, int arraySize) {
   @param
   @return
 */
-void UnoBlueTooth::sampleCheckSum() {
+void UNObt::sampleCheckSum() {
 	// Checksum of "Hello World"
 	// Use to compare the function output.
 	const uint32_t KNOWN_CHECKSUM = 0x4A17B156;	
@@ -415,14 +438,5 @@ void UnoBlueTooth::sampleCheckSum() {
 	Serial.println(checksum, HEX);
 	
 }
-
-
-
-
-
-
-
-
-
 
 
