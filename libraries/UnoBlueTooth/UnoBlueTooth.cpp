@@ -248,7 +248,7 @@ String UnoBlueTooth::addMarker(String data) {
   @return byte - data with checksum bits
 */
 byte UnoBlueTooth::addCheckSum(byte data) {
-
+uint32_t checksum = crc.finalize();
 }
 
 /************************/
@@ -286,7 +286,14 @@ String UnoBlueTooth::decrypt(String data) {
   @return boolean - FALSE if data and checksum does not match
 */
 boolean UnoBlueTooth::confirmCheckSum(byte data) {
-
+ if (checksum == byte data)
+  {
+	 return true;
+  }
+  else
+  {
+    return false;
+  }
 }
 
 /*
