@@ -248,7 +248,7 @@ String UnoBlueTooth::addMarker(String data) {
   @return byte - data with checksum bits
 */
 byte UnoBlueTooth::addCheckSum(byte data) {
-uint32_t checksum = crc.finalize();
+
 }
 
 /************************/
