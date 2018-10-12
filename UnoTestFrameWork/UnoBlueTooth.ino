@@ -316,11 +316,13 @@ String addCheckSum(String data) {
 /************************************************************************************************************************/
 
 /*
-  @desc Handles incoming data from the BTLE and the necessary processes before passing the data to the next destination.
+  @desc Checks if there is incoming transmission on the Bluetooth Serial.
+  If there is, handles the process to read and store it for access.
   @param
-  @return pointer to string of the data after processing
+  @return boolean - true if there is incomming tranmission
+  @return boolean - false if there is no incomming tranmission
 */
-boolean receiveData() {
+boolean receivedNewData() {
   // TODO /*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/
 
   // Check BTSerial if there is data
