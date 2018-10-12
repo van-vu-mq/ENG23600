@@ -11,14 +11,12 @@ void printBTStatus () {
   timeLapsed = timeCur - timePrev;
 
   if (timeLapsed >= period) {
-    timePrev = millis();
     if (getConnectionStatus()) {
       Serial.println("Connected");
     } else {
       Serial.println("No Connection");
     }
+    timePrev = millis();
   }
 }
-
-
 

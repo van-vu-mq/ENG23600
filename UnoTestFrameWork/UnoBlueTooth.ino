@@ -43,24 +43,19 @@ void beginBluetooth(int baudRate) {
 */
 boolean getConnectionStatus() {
   /*
-    Polls the state pin several times and checks whether it is BLINKING or HIGH.
-    HM-10 BLE module BLINKs every 500ms when not paired. Polling needs to have sufficient fidelity to account for this timing.
+     Polls the state pin several times and checks whether it is BLINKING or HIGH.
+     HM-10 BLE module BLINKs every 500ms when not paired.
+     Polling needs to have sufficient fidelity to account for this timing.
   */
+  int pollCount = 7;  // number of times to poll state pin
+  int pollDelay = 100; // period (ms) between polls
 
-  // TODO
-  // Test for loop with delay(ms) as an alternative
-
-  int stateCheck = 10;  // number of times to poll state pin
-  int stateCheckPeriod = 100; // period (ms) between polls
-  unsigned long timePrev = millis();
-  while (stateCheck > 0) {
-    if (millis() - timePrev >= stateCheckPeriod) {
-      if (!digitalRead(connectionStatusPin)) {
-        return false;
-      }
-      timePrev = millis();
-      stateCheck--;
+  while (pollCount > 0) {
+    if (!digitalRead(connectionStatusPin)) {
+      return false;
     }
+    pollCount--;
+    delay(pollDelay);
   }
   return true;
 }
@@ -68,20 +63,24 @@ boolean getConnectionStatus() {
 /*
   @desc Pairs the BTLE with the device correseponding to the stored MAC address.
   @param
-  @return
+  @return boolean - true if pairing successfull
+  @return boolean - false if pairing unsuccessfull
 */
 boolean connectBluetooth() {
+  if (!canDoAT()) {
+    return false;
+  }
   String successFlags[] = {"OK", "Set"};
   String response = "";
 
   BTSerial.print("AT+CON" + MegaMAC);
 
   response = atResponse();
-  if (isATSucessfull(response, successFlags)) {
-    Serial.println("Bluetooth has been connected");
+
+  int numFlags = sizeof(successFlags) / sizeof(successFlags[0]);
+  if (isATSucessfull(response, successFlags, numFlags)) {
     return true;
   } else {
-    Serial.println("Bluetooth failed to connect");
     return false;
   }
 }
@@ -93,38 +92,42 @@ boolean connectBluetooth() {
 */
 void doATCommandSetup() {
   if (canDoAT()) {
-    changeRole(1);
+    changeRole(0);
     changeName("UnoBluetooth");
     connectBluetooth();
   }
 }
 
 /*
-  @desc Change the name of the BLE
+  @desc Changes the name of the Bluetooth module to the string given.
+  Max name length is 12 characters
   @param String name
   @return
 */
-void changeName(String name) {
-  String successFlags[] = {"OK", "Set", name};
+void changeName(String newName) {
+  String successFlags[] = {"OK", "Set", newName};
   String response = "";
 
-  BTSerial.print("AT+NAME" + name);
+  BTSerial.print("AT+NAME" + newName);
   response = atResponse();
 
-  if (isATSucessfull(response, successFlags)) {
-    Serial.println("BLE name changed to " + name);
+  int numFlags = sizeof(successFlags) / sizeof(successFlags[0]);
+  if (isATSucessfull(response, successFlags, numFlags)) {
+    Serial.println("BLE name changed to " + newName);
+  } else {
+    Serial.println("Failed to change name");
   }
 }
 
 /*
-  @desc Changes the role of the BLE
+  @desc Changes the role of the Bluetooth module
   @param int role. 0=slave, 1=master
   @return
 */
 void changeRole(int role) {
   String successFlags[] = {"OK", "Set", String(role)};
   String response = "";
-  String r = "error";
+  String r = "Failed to change role";
 
   if (role == 0)      {
     r = "slave" ;
@@ -135,26 +138,30 @@ void changeRole(int role) {
 
   BTSerial.print("AT+ROLE" + String(role));
   response = atResponse();
-
-  if (isATSucessfull(response, successFlags)) {
+  int numFlags = sizeof(successFlags) / sizeof(successFlags[0]);
+  if (isATSucessfull(response, successFlags, numFlags)) {
     Serial.println("BLE role changed to " + r);
+  } else {
+    Serial.println(r);
   }
 }
 
 /*
-  @desc Check that the given response string contains all the given success
-  @param String response - reponse given by AT commands
-  @param String successFlags[]
-  @return boolean - whether all flags are found in the response
+  @desc Check that the given response string contains all the given success flags
+  @param String response - reponse given back by AT commands
+  @param String successFlags[] - array of success flags
+  @return boolean - true if all flags are found in the response
+  @return boolean - false if not all flags are found in the response
 */
-boolean isATSucessfull(String response, String successFlags[]) {
-  for (int index = 0; index < sizeof(successFlags) / sizeof(successFlags[0]); index++) {
-    if (response.indexOf(successFlags[index]) == -1) {
+boolean isATSucessfull(String response, String successFlags[], int numFlags) {
+  for (int index = 0; index < numFlags; index++) {
+    if (response.indexOf(successFlags[index]) < 0) {
       return false;
     }
   }
   return true;
 }
+
 
 /*
   @desc Listens on the AltSoftSerial ports for a response. Reads response into a string.
@@ -304,13 +311,13 @@ boolean receiveData() {
   // TODO /*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/
 
   // Check BTSerial if there is data
-  // timeout if no data for a set amount of time 
-    //return false
+  // timeout if no data for a set amount of time
+  //return false
 
   // Read and ignore until you find the packetStart marker
   // Read and store until you find the packetEnd marker
-  // timeout if too much time has passed and you have no new data before packetEnd marker is found  
-    //return false
+  // timeout if too much time has passed and you have no new data before packetEnd marker is found
+  //return false
 
   // Remove packet Start/End marker
 
@@ -318,15 +325,15 @@ boolean receiveData() {
   // if (checksum is wrong) {
   //   send error message to other bluetooth
   // } else {
-    // send acknowledge to other bluetooth
-    // remove checksum
-    // decrypt
-    // rebuild into an array
-    // remove markers
-            // depending on requirement from other team
-            // we either return a pointer, a string, fill THEIR array with the data
-    // return true
-        
+  // send acknowledge to other bluetooth
+  // remove checksum
+  // decrypt
+  // rebuild into an array
+  // remove markers
+  // depending on requirement from other team
+  // we either return a pointer, a string, fill THEIR array with the data
+  // return true
+
   // }
 
   char c;
@@ -359,8 +366,8 @@ boolean confirmCheckSum(String data) {
   // TODO /*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/
 
   // Read the data and extract the part that is the checksum using the checksum markers
-    // example markers start of checksum '&', end of checksum '*'
-  
+  // example markers start of checksum '&', end of checksum '*'
+
   // Caclculate the checksum on the data
 
   // Compare the extracted checksum and the calculated checksum
@@ -370,7 +377,7 @@ boolean confirmCheckSum(String data) {
   // } else {
   //   return false
   // }
-  
+
   return true;
 }
 
