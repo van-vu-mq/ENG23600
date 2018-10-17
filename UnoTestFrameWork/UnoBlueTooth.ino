@@ -671,17 +671,23 @@ String removeCheckSum(String data) {
   @param String data - data that contains markers
   @return String - data without markers
 */
-void removeMarker(String * dataArray, int arraySize, String markersToRemove[]) {
+void removeMarkers() {
   // TODO /*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/
+  char markers[] = {lineStartMarker, lineEndMarker};
 
-  // edit the array at the pointer
-
-  // for (every marker in the markerList) {
-  //   for (every line in the dataArray) {
-  //     remove the marker
-  // }
-
+  // for every line in the array
+  for (int i = 0; i < storedSize; i++) {
+    // for every marker
+    for (int m = 0; m < sizeof(markers) / sizeof(markers[0]); m++) {
+      // while line does not contain marker
+      while ((*(storedTransmission + i)).indexOf(markers[m]) != -1) {
+        // remove 1 character at index of where marker is found
+        (*(storedTransmission + i)).remove((*(storedTransmission + i)).indexOf(markers[m]), 1);
+      }
+    }
+  }
 }
+
 
 /************************************************************************************************************************/
 /************************/
