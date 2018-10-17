@@ -386,12 +386,28 @@ String encrypt(String data) {
   @param int arraySize - number of elements in the array
   @return
 */
+/*
+  @desc Add markers to delimit end/beginning of file and lines
+  @param String *data - pointer to data in memory
+  @param int arraySize - number of elements in the array
+  @return
+*/
 void addMarker(String * dataArray, int arraySize) {
   // TODO /*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/
 
   // Add marker to every line in the array
   // markers: startData, endData, startLine, endLine
-  //char markers = {'!', '@', '#', '$'};
+
+  // add marker to each line
+  for (int d = 0; d < arraySize; d++) {
+    *(dataArray + d) = lineStartMarker + (*(dataArray + d)) + lineEndMarker;
+  }
+
+  // add marker to beginning of data
+  *(dataArray) = dataStartMarker + (*(dataArray));
+
+  // add marker to ending of data
+  *(dataArray + arraySize - 1) = (*(dataArray + arraySize - 1)) + dataEndMarker;
 }
 
 /*
