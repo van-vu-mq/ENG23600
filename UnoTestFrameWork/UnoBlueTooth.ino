@@ -724,28 +724,6 @@ void readFromBlueTooth() {
   }
 }
 
-/*
-  @desc Reads a static array and prints it to Serial Monitor.
-  This function is for testing purposes
-  @param String dataSet[]
-  @param arraySize - the array size to limit memory reading in case where a pointer is passed instead of an array
-  @return
-*/
-void readArray(String dataSet[], int arraySize) {
-  Serial.println("\nReceiving array test starting...");
-  for (int i = 0; i < arraySize; i++) {
-    String line = dataSet[i];
-    if (!line.equals(NULL)) {
-      Serial.println(String(i) + ": " + line);
-    } else {
-      Serial.println(String(i) + ": empty line in array");
-    }
-  }
-  Serial.println("Receiving array test complete.");
-
-}
-
-
 
 
 
