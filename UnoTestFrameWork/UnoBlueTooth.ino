@@ -514,6 +514,33 @@ boolean receivedNewData() {
 }
 
 /*
+  @desc
+  @param
+  @return
+*/
+void rebuildData(String dataFromBT) {
+  // calculate array size
+  for (int i = 0; i < dataFromBT.length(); i++) {
+    if (dataFromBT.charAt(i) == lineStartMarker) {
+      storedSize++;
+    }
+  }
+
+  // change array size storage
+  storedTransmission = new String[storedSize];
+
+  // store in parts
+  for (int i = 0; i < storedSize; i++) {
+    int startMarkerPos = dataFromBT.indexOf(lineStartMarker);
+    int endMarkerPos = dataFromBT.indexOf(lineEndMarker);
+    String line = dataFromBT.substring(startMarkerPos, endMarkerPos + 1);
+    dataFromBT.remove(startMarkerPos, endMarkerPos - startMarkerPos + 1);
+    *(storedTransmission + i) = line;
+  }
+
+}
+
+/*
   @desc Undoes the encryption on given String
   @param String data - encrypted datas
   @return String - unencrypted data
