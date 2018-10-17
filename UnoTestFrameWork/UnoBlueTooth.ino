@@ -8,6 +8,18 @@
 
 #define connectionStatusPin 13
 
+#define packetStartMarker   '<'
+#define packetEndMarker     '>'
+
+#define dataStartMarker     '!'
+#define dataEndMarker       '@'
+
+#define lineStartMarker     '#'
+#define lineEndMarker       '$'
+
+#define checksumStartMarker '&'
+#define checksumEndMarker   '*'
+
 AltSoftSerial BTSerial;
 String MegaMAC = "";
 
