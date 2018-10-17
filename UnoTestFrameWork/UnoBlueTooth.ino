@@ -745,24 +745,6 @@ void readArray(String dataSet[], int arraySize) {
 
 }
 
-/*
-  @desc Reads and prints out data of an array from given pointer
-  @param *data - pointer to the array
-  @param arraySize
-  @return
-*/
-void readArrayFromPointer(String * data, int arraySize) {
-  Serial.println("\nReceiving array pointer test starting...");
-  for (int i = 0; i < arraySize; i++) {
-    String line = *(data + i);
-    if (!line.equals(NULL)) {
-      Serial.println(String(i) + ": " + line);
-    } else {
-      Serial.println(String(i) + ": empty line in array");
-    }
-  }
-  Serial.println("Receiving array pointer test complete.");
-}
 
 /*
   @desc Calculate checksum for static data.
