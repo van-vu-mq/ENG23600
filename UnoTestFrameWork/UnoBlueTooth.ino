@@ -23,6 +23,14 @@
 AltSoftSerial BTSerial;
 String MegaMAC = "";
 
+String *storedTransmission;
+int storedSize = 0;
+String btbuffer = "";
+
+// Change to false to reduce global variables
+boolean includeErrorMessage = false;
+boolean testingMessages = false;
+boolean receiveTesting = false;
 
 /************************************************************************************************************************/
 /************************/
@@ -39,12 +47,16 @@ void beginBluetooth(int baudRate) {
   pinMode(connectionStatusPin, INPUT);
   Serial.begin(baudRate);
   while (!Serial);
-  Serial.print("Sketch:   ");   Serial.println(__FILE__);
-  Serial.print("Uploaded: ");   Serial.println(__DATE__);
+  if (includeErrorMessage) {
+    Serial.print("\nSketch:   ");   Serial.println(__FILE__);
+    Serial.print("Uploaded: ");   Serial.println(__DATE__);
+  }
+
 
   BTSerial.begin(baudRate);
-  Serial.println("BTserial started at " + String(baudRate));
-
+  if (includeErrorMessage) {
+    Serial.println("BTserial started at " + String(baudRate));
+  }
   doATCommandSetup();
 }
 
@@ -104,7 +116,7 @@ boolean connectBluetooth() {
 */
 void doATCommandSetup() {
   if (canDoAT()) {
-    changeRole(0);
+    changeRole(1);
     changeName("UnoBluetooth");
     connectBluetooth();
   }
@@ -124,10 +136,12 @@ void changeName(String newName) {
   response = atResponse();
 
   int numFlags = sizeof(successFlags) / sizeof(successFlags[0]);
-  if (isATSucessfull(response, successFlags, numFlags)) {
-    Serial.println("BLE name changed to " + newName);
-  } else {
-    Serial.println("Failed to change name");
+  if (includeErrorMessage) {
+    if (isATSucessfull(response, successFlags, numFlags)) {
+      Serial.println("BLE name changed to " + newName);
+    } else {
+      Serial.println("Failed to change name");
+    }
   }
 }
 
@@ -151,10 +165,12 @@ void changeRole(int role) {
   BTSerial.print("AT+ROLE" + String(role));
   response = atResponse();
   int numFlags = sizeof(successFlags) / sizeof(successFlags[0]);
-  if (isATSucessfull(response, successFlags, numFlags)) {
-    Serial.println("BLE role changed to " + r);
-  } else {
-    Serial.println(r);
+  if (includeErrorMessage) {
+    if (isATSucessfull(response, successFlags, numFlags)) {
+      Serial.println("BLE role changed to " + r);
+    } else {
+      Serial.println(r);
+    }
   }
 }
 
@@ -192,7 +208,9 @@ String atResponse() {
   // Check if there is a response within timeout period
   while (!BTSerial.available()) {
     if ((millis() - timeStart) > timeout) {
-      Serial.println("AT Response Timeout");
+      if (includeErrorMessage) {
+        Serial.println("AT Response Timeout");
+      }
       return "TIMEOUT";
     }
   }
@@ -205,7 +223,9 @@ String atResponse() {
     char c = BTSerial.read();
     response.concat(c);
   }
-  Serial.println("\n" + response);
+  if (includeErrorMessage) {
+    Serial.println("\n" + response);
+  }
   return response;
 }
 
@@ -219,7 +239,9 @@ boolean canDoAT() {
   if (!getConnectionStatus()) {
     return true;
   } else {
-    Serial.println("Error.\nBlueTooth is currently paired, unable to perform AT commands");
+    if (includeErrorMessage) {
+      Serial.println("Error.\nBlueTooth is currently paired, unable to perform AT commands");
+    }
     return false;
   }
 }
@@ -241,27 +263,52 @@ boolean canDoAT() {
 boolean sendData(String data[], int arraySize) {
   // TODO /*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/
 
+  // clone array so we can edit the data in memory
+  String copyData[arraySize];
+  memcpy(copyData, data, sizeof(data[0])*arraySize);
+
   // Add markers
+  addMarker(&copyData[0], arraySize);
+  if (testingMessages) {
+    Serial.println("\nAfter adding markers");
+    for (int i = 0; i < arraySize; i++) {
+      Serial.println(copyData[i]);
+    }
+  }
 
   // Convert to single String
+  String packet = transformToString(copyData, arraySize);
+  if (testingMessages) {
+    Serial.println("\nAfter transforming into a single string:");
+    Serial.println(packet);
+  }
 
-  // Encrypt string
+  // Encrypt data
+  packet = encrypt(packet);
+  if (testingMessages) {
+    Serial.println("\nAfter encrypting:");
+    Serial.println(packet);
+  }
 
-  // Add checksum to string
+  // Prepend checksum
+  packet = addCheckSum(packet);
+  if (testingMessages) {
+    Serial.println("\nAfter Adding checksum:");
+    Serial.println(packet);
+  }
 
-  // Wrap whole string in marker : '<', '>'
+
+  packet = packetStartMarker + packet + packetEndMarker;
 
   // Write to BTSerial
-
-  // Listen for acknowlegde
-
-  // if (acknowledge received) {
-  //   return true;
-  // } else {
-  //   return false;
-  // }
-
-  return true;
+  int transmitAttempts = 5;
+  for (int i = 0; i < transmitAttempts; i++) {
+    transmitData(packet);
+    if (receivedAcknowlegement()) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /*
