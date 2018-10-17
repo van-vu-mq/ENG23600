@@ -417,17 +417,21 @@ void addMarker(String * dataArray, int arraySize) {
 */
 String addCheckSum(String data) {
   // TODO /*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/
+  // Uses CRC32 library
+
+  // convert data into byte representation
+  uint8_t byteBuffer[data.length() + 1];
+  data.getBytes(byteBuffer, data.length() + 1);
+  size_t numBytes = sizeof(byteBuffer) - 1;
 
   // calculate checksum
+  uint32_t checksum = CRC32::calculate(byteBuffer, numBytes);
 
-  // wrap checksum with marker: example '&', '*'
-
+  // wrap checksum with markers
   // append checksum to data String
+  data = checksumStartMarker + String(checksum) + checksumEndMarker + data;
 
-  //return data with the checksum included
-
-  return "";
-
+  return data;
 }
 
 
