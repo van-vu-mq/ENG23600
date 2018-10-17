@@ -25,7 +25,6 @@ String MegaMAC = "";
 
 String *storedTransmission;
 int storedSize = 0;
-String btbuffer = "";
 
 // Change to false to reduce global variables
 boolean includeErrorMessage = false;
@@ -254,6 +253,30 @@ boolean canDoAT() {
 /************************************************************************************************************************/
 
 /*
+  @desc Handles the conversion of int array of 3 elements to be sent
+  @param int data[] - array
+  @return boolean - true if message is sent and received by other paired device
+  @return boolean - false if message is unable to be sent or not confirmed to be received by other paired device
+*/
+boolean sendIntArray(String intData[]) {
+  // hardcoded, predetermined size of communicated data
+  // Refer to Uno back-end and Mega drive-base team
+  // +1 contains information about original data type for rebuilding
+  int arraySize = 3 + 1;
+  String convertedData[arraySize];
+
+  // mark original data type
+  convertedData[0] = "INT";
+
+  for (int i = 1; i < arraySize; i++) {
+    convertedData[i] = intData[i];
+  }
+
+  return sendData(convertedData, arraySize);
+}
+
+
+/*
   @desc Handles the transmission process for an array of Strings
   @param String data[] - array of message to be sent
   @param int arraySize
@@ -304,11 +327,14 @@ boolean sendData(String data[], int arraySize) {
   int transmitAttempts = 5;
   for (int i = 0; i < transmitAttempts; i++) {
     transmitData(packet);
-    if (receivedAcknowlegement()) {
-      return true;
-    }
   }
-  return false;
+
+  // Confirm data is received by other device
+  if (receivedAcknowlegement()) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 /*
@@ -319,7 +345,18 @@ boolean sendData(String data[], int arraySize) {
 */
 boolean receivedAcknowlegement() {
   // TODO /*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/
-  return true;
+  int timeout = 1500;
+  unsigned long timePrev = millis();
+
+  while (timePrev - millis() < timeout) {
+    String ack = readFromBTBuffer();
+    if (!ack.equals("")) {
+      if (ack.equals("<ACK>") {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 void transmitData(String data) {
@@ -469,48 +506,104 @@ boolean receivedNewData() {
   // remove packet markers
   dataFromBT.remove(dataFromBT.indexOf(packetStartMarker), 1);
   dataFromBT.remove(dataFromBT.indexOf(packetEndMarker), 1);
-
   if (testingMessages) {
     Serial.println("\nData after removing packet markers:");
     Serial.println(dataFromBT);
   }
 
   if (!confirmCheckSum(dataFromBT)) {
-    Serial.println("failed checksum");
+    if (testingMessages) {
+      Serial.println("failed checksum");
+    }
     return false;
-  } else {
-    // send acknowledge
+  }
 
-    dataFromBT = removeCheckSum(dataFromBT);
-    if (testingMessages) {
-      Serial.println("\nData after confirming and removing checksum:");
-      Serial.println(dataFromBT);
-    }
+  if (testingMessages) {
+    Serial.println("passed checksum");
+  }
+  // send acknowledge
+  sendAcknowledge();
 
-    dataFromBT = decrypt(dataFromBT);
 
-    if (testingMessages) {
-      Serial.println("\nData after decrypting:");
-      Serial.println(dataFromBT);
-    }
+  // remove checksum from the packet
+  dataFromBT = removeCheckSum(dataFromBT);
+  if (testingMessages) {
+    Serial.println("\nData after confirming and removing checksum:");
+    Serial.println(dataFromBT);
+  }
 
-    rebuildData(dataFromBT);
-    if (testingMessages) {
-      Serial.println("\nData after being rebuilt:");
-      for (int i = 0; i < storedSize; i++) {
-        Serial.println(*(storedTransmission + i));
-      }
-    }
+  // decrypt
+  dataFromBT = decrypt(dataFromBT);
+  if (testingMessages) {
+    Serial.println("\nData after decrypting:");
+    Serial.println(dataFromBT);
+  }
 
-    removeMarkers();
-    if (testingMessages) {
-      Serial.println("\nData after being removing markers:");
-      for (int i = 0; i < storedSize; i++) {
-        Serial.println(*(storedTransmission + i));
-      }
+
+  // rebuild the data into array
+  rebuildData(dataFromBT);
+  if (testingMessages) {
+    Serial.println("\nData after being rebuilt:");
+    for (int i = 0; i < storedSize; i++) {
+      Serial.println(*(storedTransmission + i));
     }
   }
-  return storedTransmission;
+
+  // scrub the array of any added data used in tranmission
+  removeMarkers();
+  if (testingMessages) {
+    Serial.println("\nData after being removing markers:");
+    for (int i = 0; i < storedSize; i++) {
+      Serial.println(*(storedTransmission + i));
+    }
+  }
+
+  // write data to designated location
+  writeToVariables();
+  if (testingMessages) {
+    Serial.println("Data written tod designated location / variables");
+  }
+
+
+
+  return true;
+}
+
+
+/*
+  @desc
+  @param
+  @return
+*/
+void sendAcknowledge() {
+  BTSeria.print("<ACK>");
+}
+
+/*
+  @desc
+  @param
+  @return
+*/
+void writeToVariables () {
+  /*
+     Uno
+     redCansError;
+     greenCansError;
+     blueCansError;
+  */
+
+  /*
+     Mega
+     canColours[3] = {r, g b}
+  */
+  if ((*storedTransmission).equals("INT")) {
+    int arraySize = 3 + 1;
+    redCansError = (*(storedTransmission + 1)).toInt();
+    greenCansError = (*(storedTransmission + 2)).toInt();
+    blueCansError = (*(storedTransmission + 3)).toInt();
+  }
+
+
 }
 
 /*
