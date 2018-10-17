@@ -354,6 +354,22 @@ void transmitData(String data) {
   }
 }
 
+
+/*
+  @desc Generates string containing all the data within given array
+  @param String dataArray[]
+  @param int arraySize
+  @return String
+*/
+String transformToString(String dataArray[], int arraySize) {
+  String s = "";
+
+  for (int i = 0; i < arraySize; i++) {
+    s.concat(dataArray[i]);
+  }
+  return s;
+}
+
 /*
   @desc Encrypts a given string.
   @param String data
