@@ -452,40 +452,65 @@ String addCheckSum(String data) {
 boolean receivedNewData() {
   // TODO /*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/
 
-  // Check BTSerial if there is data
-  // timeout if no data for a set amount of time
-  //return false
-
-  // Read and ignore until you find the packetStart marker
-  // Read and store until you find the packetEnd marker
-  // timeout if too much time has passed and you have no new data before packetEnd marker is found
-  //return false
-
-  // Remove packet Start/End marker
-
-  // confirm checksum
-  // if (checksum is wrong) {
-  //   send error message to other bluetooth
-  // } else {
-  // send acknowledge to other bluetooth
-  // remove checksum
-  // decrypt
-  // rebuild into an array
-  // remove markers
-  // depending on requirement from other team
-  // we either return a pointer, a string, fill THEIR array with the data
-  // return true
-
-  // }
-
-  char c;
-  String data = "";
-  if (BTSerial.available()) {
-    c = BTSerial.read();
-    data.concat(c);
+  // failed to get communication from Bluetooth
+  String dataFromBT = readFromBTBuffer();
+  if (dataFromBT.equals(""))        {
+    return false;
+  }
+  if (dataFromBT.equals("TIMEOUT")) {
+    return false;
   }
 
-  return true;
+  if (testingMessages) {
+    Serial.println("\nData read from BTSerial:");
+    Serial.println(dataFromBT);
+  }
+
+  // remove packet markers
+  dataFromBT.remove(dataFromBT.indexOf(packetStartMarker), 1);
+  dataFromBT.remove(dataFromBT.indexOf(packetEndMarker), 1);
+
+  if (testingMessages) {
+    Serial.println("\nData after removing packet markers:");
+    Serial.println(dataFromBT);
+  }
+
+  if (!confirmCheckSum(dataFromBT)) {
+    Serial.println("failed checksum");
+    return false;
+  } else {
+    // send acknowledge
+
+    dataFromBT = removeCheckSum(dataFromBT);
+    if (testingMessages) {
+      Serial.println("\nData after confirming and removing checksum:");
+      Serial.println(dataFromBT);
+    }
+
+    dataFromBT = decrypt(dataFromBT);
+
+    if (testingMessages) {
+      Serial.println("\nData after decrypting:");
+      Serial.println(dataFromBT);
+    }
+
+    rebuildData(dataFromBT);
+    if (testingMessages) {
+      Serial.println("\nData after being rebuilt:");
+      for (int i = 0; i < storedSize; i++) {
+        Serial.println(*(storedTransmission + i));
+      }
+    }
+
+    removeMarkers();
+    if (testingMessages) {
+      Serial.println("\nData after being removing markers:");
+      for (int i = 0; i < storedSize; i++) {
+        Serial.println(*(storedTransmission + i));
+      }
+    }
+  }
+  return storedTransmission;
 }
 
 /*
