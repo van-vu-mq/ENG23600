@@ -654,6 +654,19 @@ boolean confirmCheckSum(String data) {
 }
 
 /*
+  @desc
+  @param
+  @return
+*/
+String removeCheckSum(String data) {
+  int csStart = data.indexOf(checksumStartMarker);
+  int csEnd = data.indexOf(checksumEndMarker);
+
+  data.remove(csStart, csEnd - csStart + 1);
+  return data;
+}
+
+/*
   @desc Removes the added markers for transmission from given data
   @param String data - data that contains markers
   @return String - data without markers
