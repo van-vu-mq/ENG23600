@@ -118,14 +118,11 @@ void doATCommandSetup() {
 */
 void changeName(String newName) {
   String successFlags[] = {"OK", "Set", newName};
-  String response = "";
-
   BTSerial.print("AT+NAME" + newName);
-  response = atResponse();
-
-  int numFlags = sizeof(successFlags) / sizeof(successFlags[0]);
+  
   if (includeErrorMessage) {
-    if (isATSucessfull(response, successFlags, numFlags)) {
+    int numFlags = sizeof(successFlags) / sizeof(successFlags[0]);
+    if (isATSucessfull(atResponse(), successFlags, numFlags)) {
       Serial.println("BLE name changed to " + newName);
     } else {
       Serial.println("Failed to change name");
@@ -140,24 +137,14 @@ void changeName(String newName) {
 */
 void changeRole(int role) {
   String successFlags[] = {"OK", "Set", String(role)};
-  String response = "";
-  String r = "Failed to change role";
-
-  if (role == 0)      {
-    r = "slave" ;
-  }
-  else if (role == 1) {
-    r = "master";
-  }
-
   BTSerial.print("AT+ROLE" + String(role));
-  response = atResponse();
-  int numFlags = sizeof(successFlags) / sizeof(successFlags[0]);
+
   if (includeErrorMessage) {
-    if (isATSucessfull(response, successFlags, numFlags)) {
-      Serial.println("BLE role changed to " + r);
+    int numFlags = sizeof(successFlags) / sizeof(successFlags[0]);
+    if (isATSucessfull(atResponse(), successFlags, numFlags)) {
+      Serial.println("BLE role changed to " + String(role));
     } else {
-      Serial.println(r);
+      Serial.println("Failed to change role");
     }
   }
 }
@@ -185,11 +172,10 @@ boolean isATSucessfull(String response, String successFlags[], int numFlags) {
   @return String - response
 */
 String atResponse() {
-  if (!canDoAT()) {
-    return "";
-  }
-
   String response = "";
+  if (!canDoAT()) {
+    return response;
+  }
   unsigned long timeout = 2000;
   unsigned long timeStart = millis();
 
@@ -199,7 +185,7 @@ String atResponse() {
       if (includeErrorMessage) {
         Serial.println("AT Response Timeout");
       }
-      return "TIMEOUT";
+      return response;
     }
   }
 
