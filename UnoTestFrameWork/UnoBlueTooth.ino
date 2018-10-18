@@ -4,7 +4,6 @@
 */
 
 #include <AltSoftSerial.h>
-#include <CRC32.h>
 
 #define connectionStatusPin 13
 
@@ -173,7 +172,7 @@ boolean isATSucessfull(String response, String successFlags[], int numFlags) {
 */
 String atResponse() {
   String response = "";
-  if (!canDoAT()) {
+  if (getConnectionStatus()) {
     return response;
   }
   unsigned long timeout = 2000;
@@ -201,23 +200,6 @@ String atResponse() {
     Serial.println("\n" + response);
   }
   return response;
-}
-
-/*
-  @desc Checks whether the conditions are met to execute AT commands
-  @param
-  @return boolean - false if not able to execute AT commands
-  @return boolean - true if able to execute AT commands
-*/
-boolean canDoAT() {
-  if (!getConnectionStatus()) {
-    return true;
-  } else {
-    if (includeErrorMessage) {
-      Serial.println("Error.\nBlueTooth is currently paired, unable to perform AT commands");
-    }
-    return false;
-  }
 }
 
 
@@ -612,7 +594,7 @@ String readFromBTBuffer() {
 
 
   char fromBT = BTSerial.read();
-  int timeout = 5000;
+  int timeout = 1000;
   unsigned long timePrev = millis();
 
   // read until start of packet marker is found
