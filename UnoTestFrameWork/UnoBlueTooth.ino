@@ -322,10 +322,8 @@ boolean receivedAcknowlegement() {
 
   while (timePrev - millis() < timeout) {
     String ack = readFromBTBuffer();
-    if (!ack.equals("")) {
-      if (ack.equals("<ACK>")) {
-        return true;
-      }
+    if (ack.equals("<ACK>")) {
+      return true;
     }
   }
   return false;
