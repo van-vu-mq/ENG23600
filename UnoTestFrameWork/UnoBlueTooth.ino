@@ -90,18 +90,10 @@ boolean getConnectionStatus() {
   @return boolean - false if pairing unsuccessfull
 */
 boolean connectBluetooth() {
-  if (!canDoAT()) {
-    return false;
-  }
   String successFlags[] = {"OK", "Set"};
-  String response = "";
-
   BTSerial.print("AT+CON" + MegaMAC);
-
-  response = atResponse();
-
   int numFlags = sizeof(successFlags) / sizeof(successFlags[0]);
-  if (isATSucessfull(response, successFlags, numFlags)) {
+  if (isATSucessfull(atResponse(), successFlags, numFlags)) {
     return true;
   } else {
     return false;
@@ -114,11 +106,8 @@ boolean connectBluetooth() {
   @return
 */
 void doATCommandSetup() {
-  if (canDoAT()) {
-    changeRole(1);
-    changeName("UnoBluetooth");
-    connectBluetooth();
-  }
+  changeRole(1);
+  connectBluetooth();
 }
 
 /*
@@ -197,7 +186,7 @@ boolean isATSucessfull(String response, String successFlags[], int numFlags) {
 */
 String atResponse() {
   if (!canDoAT()) {
-    return "ERROR";
+    return "";
   }
 
   String response = "";
@@ -258,7 +247,7 @@ boolean canDoAT() {
   @return boolean - true if message is sent and received by other paired device
   @return boolean - false if message is unable to be sent or not confirmed to be received by other paired device
 */
-boolean sendIntArray(String intData[]) {
+boolean sendIntArray(int intData[]) {
   // hardcoded, predetermined size of communicated data
   // Refer to Uno back-end and Mega drive-base team
   // +1 contains information about original data type for rebuilding
@@ -351,7 +340,7 @@ boolean receivedAcknowlegement() {
   while (timePrev - millis() < timeout) {
     String ack = readFromBTBuffer();
     if (!ack.equals("")) {
-      if (ack.equals("<ACK>") {
+      if (ack.equals("<ACK>")) {
         return true;
       }
     }
@@ -576,7 +565,7 @@ boolean receivedNewData() {
   @return
 */
 void sendAcknowledge() {
-  BTSeria.print("<ACK>");
+  BTSerial.print("<ACK>");
 }
 
 /*
