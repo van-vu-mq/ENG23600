@@ -495,7 +495,7 @@ boolean receivedNewData() {
     Serial.println("\nData after removing packet markers:");
     Serial.println(dataFromBT);
   }
-  
+
   // check data integrity
   if (!confirmCheckSum(dataFromBT)) {
     if (testingMessages) {
@@ -506,7 +506,7 @@ boolean receivedNewData() {
   if (testingMessages) {
     Serial.println("passed checksum");
   }
-  
+
   // send acknowledge
   sendAcknowledge();
 
@@ -610,7 +610,7 @@ String readFromBTBuffer() {
     return packet;
   }
 
-  
+
   char fromBT = BTSerial.read();
   int timeout = 5000;
   unsigned long timePrev = millis();
@@ -622,12 +622,10 @@ String readFromBTBuffer() {
         Serial.println("Read from buffer TIMEOUT1 - no start packet marker");
         Serial.println(packet);
       }
-      return "TIMEOUT";
+      return "";
     }
     if (BTSerial.available()) {
       fromBT = BTSerial.read();
-      packet = packet + fromBT;
-      Serial.print(fromBT);
       timePrev = millis();
     }
 
@@ -635,7 +633,7 @@ String readFromBTBuffer() {
 
   // start of packet found
   // store
-  packet = packet + fromBT;
+  packet.concat(fromBT);
 
   // read until end of packet marker is found
   while (fromBT != packetEndMarker) {
@@ -647,11 +645,11 @@ String readFromBTBuffer() {
           BTSerial.read();
         }
       }
-      return "TIMEOUT";
+      return "";
     }
     if (BTSerial.available()) {
       fromBT = BTSerial.read();
-      packet =  packet + fromBT;
+      packet.concat(fromBT);
       timePrev = millis();
     }
   }
@@ -719,7 +717,7 @@ boolean confirmCheckSum(String data) {
   data.getBytes(byteBuffer, data.length() + 1);
   size_t numBytes = sizeof(byteBuffer) - 1;
 
-  uint32_t calculatedChecksum = CRC32::calculate(byteBuffer, numBytes);
+  uint8_t calculatedChecksum = CRC8(&byteBuffer[0], numBytes);
 
   // Compare the extracted checksum and the calculated checksum
   if (String(calculatedChecksum).equals(givenCheckSum)) {
