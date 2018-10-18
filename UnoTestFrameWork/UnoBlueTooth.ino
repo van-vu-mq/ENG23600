@@ -119,7 +119,7 @@ void doATCommandSetup() {
 void changeName(String newName) {
   String successFlags[] = {"OK", "Set", newName};
   BTSerial.print("AT+NAME" + newName);
-  
+
   if (includeErrorMessage) {
     int numFlags = sizeof(successFlags) / sizeof(successFlags[0]);
     if (isATSucessfull(atResponse(), successFlags, numFlags)) {
@@ -258,12 +258,12 @@ boolean sendIntArray(int intData[]) {
   @return boolean - true if message is sent and received by other paired device
   @return boolean - false if message is unable to be sent or not confirmed to be received by other paired device
 */
-boolean sendData(String data[], int arraySize) {
+boolean sendData(String copyData[], int arraySize) {
   // TODO /*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/
 
   // clone array so we can edit the data in memory
-  String copyData[arraySize];
-  memcpy(copyData, data, sizeof(data[0])*arraySize);
+  //String copyData[arraySize];
+  //memcpy(copyData, data, sizeof(data[0])*arraySize);
 
   // Add markers
   addMarker(&copyData[0], arraySize);
@@ -295,21 +295,18 @@ boolean sendData(String data[], int arraySize) {
     Serial.println(packet);
   }
 
-
+  // add packet markers
   packet = packetStartMarker + packet + packetEndMarker;
 
   // Write to BTSerial
   int transmitAttempts = 5;
   for (int i = 0; i < transmitAttempts; i++) {
     transmitData(packet);
+    if (receivedAcknowlegement()) {
+      return true;
+    }
   }
-
-  // Confirm data is received by other device
-  if (receivedAcknowlegement()) {
-    return true;
-  } else {
-    return false;
-  }
+  return false;
 }
 
 /*
