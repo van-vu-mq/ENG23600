@@ -424,7 +424,9 @@ void addMarker(String * dataArray, int arraySize) {
 */
 String addCheckSum(String data) {
   // TODO /*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/
-  // Uses CRC32 library
+  // Uses CRC8 CODE
+  //CRC-8 - based on the CRC8 formulas by Dallas/Maxim
+  //code released under the therms of the GNU GPL 3.0 license
 
   // convert data into byte representation
   uint8_t byteBuffer[data.length() + 1];
@@ -432,13 +434,29 @@ String addCheckSum(String data) {
   size_t numBytes = sizeof(byteBuffer) - 1;
 
   // calculate checksum
-  uint32_t checksum = CRC32::calculate(byteBuffer, numBytes);
+  uint8_t checksum = CRC8(&byteBuffer[0], numBytes);
 
   // wrap checksum with markers
   // append checksum to data String
-  data = checksumStartMarker + String(checksum) + checksumEndMarker + data;
+  return (checksumStartMarker + String(checksum) + checksumEndMarker + data);
+}
 
-  return data;
+//CRC-8 - based on the CRC8 formulas by Dallas/Maxim
+//code released under the therms of the GNU GPL 3.0 license
+byte CRC8(const byte *data, byte len) {
+  byte crc = 0x00;
+  while (len--) {
+    byte extract = *data++;
+    for (byte tempI = 8; tempI; tempI--) {
+      byte sum = (crc ^ extract) & 0x01;
+      crc >>= 1;
+      if (sum) {
+        crc ^= 0x8C;
+      }
+      extract >>= 1;
+    }
+  }
+  return crc;
 }
 
 
@@ -464,9 +482,6 @@ boolean receivedNewData() {
   if (dataFromBT.equals(""))        {
     return false;
   }
-  if (dataFromBT.equals("TIMEOUT")) {
-    return false;
-  }
 
   if (testingMessages) {
     Serial.println("\nData read from BTSerial:");
@@ -480,17 +495,18 @@ boolean receivedNewData() {
     Serial.println("\nData after removing packet markers:");
     Serial.println(dataFromBT);
   }
-
+  
+  // check data integrity
   if (!confirmCheckSum(dataFromBT)) {
     if (testingMessages) {
       Serial.println("failed checksum");
     }
     return false;
   }
-
   if (testingMessages) {
     Serial.println("passed checksum");
   }
+  
   // send acknowledge
   sendAcknowledge();
 
@@ -533,9 +549,6 @@ boolean receivedNewData() {
   if (testingMessages) {
     Serial.println("Data written tod designated location / variables");
   }
-
-
-
   return true;
 }
 
@@ -591,13 +604,13 @@ String readFromBTBuffer() {
   }
   // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-
+  String packet = "";
   // No communication on Bluetooth Serial
   if (BTSerial.available() <= 0) {
-    return "";
+    return packet;
   }
 
-  String packet = "";
+  
   char fromBT = BTSerial.read();
   int timeout = 5000;
   unsigned long timePrev = millis();
