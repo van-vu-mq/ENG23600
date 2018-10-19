@@ -1,12 +1,11 @@
 
 
-#ENGG23600 Bluetooth System ReadMe
-
-##How To
-
+# ENGG23600 Bluetooth System ReadMe
+## How To
 
 
-###Transmitting Data
+
+### Transmitting Data
 ```
 boolean sendIntArray(int data[])
 ```
