@@ -89,12 +89,21 @@ boolean getConnectionStatus() {
   @return boolean - false if pairing unsuccessfull
 */
 boolean connectBluetooth() {
+  if (testingMessages) {
+
+  }
   String successFlags[] = {"OK", "Set"};
   BTSerial.print("AT+CON" + MegaMAC);
   int numFlags = sizeof(successFlags) / sizeof(successFlags[0]);
   if (isATSucessfull(atResponse(), successFlags, numFlags)) {
+    if (testingMessages) {
+      Serial.println("Successfully to Pair");
+    }
     return true;
   } else {
+    if (testingMessages) {
+      Serial.println("Unable to Pair");
+    }
     return false;
   }
 }
@@ -219,16 +228,20 @@ boolean sendIntArray(int intData[]) {
   // hardcoded, predetermined size of communicated data
   // Refer to Uno back-end and Mega drive-base team
   // +1 contains information about original data type for rebuilding
-  int arraySize = 3 + 1;
+  int arraySize = 4;
   String convertedData[arraySize];
 
   // mark original data type
   convertedData[0] = "INT";
 
+  String s = "";
+  s = s.concat(String(intData[0]));
+  s = s.concat(String(intData[1]));
+  s = s.concat(String(intData[2]));
+  //Serial.println(s);
   for (int i = 1; i < arraySize; i++) {
-    convertedData[i] = intData[i];
+    convertedData[i] = String(intData[i - 1]);
   }
-
   return sendData(convertedData, arraySize);
 }
 
@@ -281,7 +294,7 @@ boolean sendData(String copyData[], int arraySize) {
   packet = packetStartMarker + packet + packetEndMarker;
 
   // Write to BTSerial
-  int transmitAttempts = 5;
+  int transmitAttempts = 1;
   for (int i = 0; i < transmitAttempts; i++) {
     transmitData(packet);
     if (receivedAcknowlegement()) {
@@ -298,6 +311,7 @@ boolean sendData(String copyData[], int arraySize) {
   @return boolean - false if acknowledgement not received
 */
 boolean receivedAcknowlegement() {
+
   // TODO /*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/
   int timeout = 1500;
   unsigned long timePrev = millis();
@@ -731,9 +745,9 @@ void removeMarkers() {
   // TODO /*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/
   // for every line in the array
   for (int i = 0; i < storedSize; i++) {
-      (*(storedTransmission + i)).remove( (*(storedTransmission + i)).indexOf(lineStartMarker), 1);
-      (*(storedTransmission + i)).remove( (*(storedTransmission + i)).indexOf(lineEndMarker), 1);
-    }
+    (*(storedTransmission + i)).remove( (*(storedTransmission + i)).indexOf(lineStartMarker), 1);
+    (*(storedTransmission + i)).remove( (*(storedTransmission + i)).indexOf(lineEndMarker), 1);
+  }
 }
 
 
