@@ -1,22 +1,25 @@
 
 
->>>>>	ENGG23600 Bluetooth System ReadMe	<<<<<
+#ENGG23600 Bluetooth System ReadMe
+
+##How To
 
 
-/***************************************************/
-/****											****/
-/****	  		Transmitting Data				****/
-/****											****/
-/***************************************************/
 
-/* 
-	@description	Takes an array of integers to send to other device
-	@parameter		Array of integers. Must be of size 3 (number of elements)
-	@return 		boolean - whether the data was successfully sent
-*/
+###Transmitting Data
+```
 boolean sendIntArray(int data[])
+```
 
-// Example
+```
+@description	Takes an array of integers to send to other device
+@parameter		Array of integers. Must be of size 3 (number of elements)
+@return 		boolean - whether the data was successfully sent
+```
+
+
+**Example**
+```
 void doSomething() {
 	int canRGBOrder[3] = {2, 3, 1};
 	
@@ -27,7 +30,7 @@ void doSomething() {
 		// Update front-end / user etc
 	}
 }
-
+```
 
 
 
