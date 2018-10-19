@@ -3,6 +3,14 @@
 # ENGG23600 Bluetooth System ReadMe
 # How To Send & Receive Data
 
+## NOTE:
+The Uno version uses AltSoftSerial library to free up Serial0 to allow debugging using 
+the Serial Monitor. This will result in additional storage space being used (roughly 5-6%, 
+approximate 2KB)
+
+The final version will be released separately without this library. Bluetooth communication
+will then be using D0 (RX) and D1 (TX) pins.
+
 
 ### Transmitting Data	--------------------------------------------------
 Function to call: `boolean sendIntArray(int data[])`
