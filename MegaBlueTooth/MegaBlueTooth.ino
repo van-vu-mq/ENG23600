@@ -27,11 +27,14 @@ String UNOMAC = "";
 
 String *storedTransmission;
 int storedSize = 0;
-String btbuffer = "";
+
+int redCansError;
+int greenCansError;
+int blueCansError;
 
 // Change to false to reduce global variables
 boolean includeErrorMessage = false;
-boolean testingMessages = false;
+boolean testingMessages = true;
 boolean receiveTesting = false;
 
 
@@ -299,6 +302,32 @@ boolean canDoAT() {
 /************************/
 /************************************************************************************************************************/
 
+/*
+  @desc Handles the conversion of int array of 3 elements to be sent
+  @param int data[] - array
+  @return boolean - true if message is sent and received by other paired device
+  @return boolean - false if message is unable to be sent or not confirmed to be received by other paired device
+*/
+boolean sendIntArray(int intData[]) {
+  // hardcoded, predetermined size of communicated data
+  // Refer to Uno back-end and Mega drive-base team
+  // +1 contains information about original data type for rebuilding
+  int arraySize = 4;
+  String convertedData[arraySize];
+
+  // mark original data type
+  convertedData[0] = "INT";
+
+  String s = "";
+  s = s.concat(String(intData[0]));
+  s = s.concat(String(intData[1]));
+  s = s.concat(String(intData[2]));
+  //Serial.println(s);
+  for (int i = 1; i < arraySize; i++) {
+    convertedData[i] = String(intData[i - 1]);
+  }
+  return sendData(convertedData, arraySize);
+}
 
 /*
   @desc Handles the transmission process for an array of Strings
@@ -344,11 +373,11 @@ boolean sendData(String data[], int arraySize) {
     Serial.println(packet);
   }
 
-
+  // add packet markers
   packet = packetStartMarker + packet + packetEndMarker;
 
   // Write to Serial3
-  int transmitAttempts = 5;
+  int transmitAttempts = 1;
   for (int i = 0; i < transmitAttempts; i++) {
     transmitData(packet);
     if (receivedAcknowlegement()) {
@@ -365,11 +394,17 @@ boolean sendData(String data[], int arraySize) {
   @return boolean - false if acknowledgement not received
 */
 boolean receivedAcknowlegement() {
-  // TODO /*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/
-  
-  
-   
-  return true;
+
+  int timeout = 1500;
+  unsigned long timePrev = millis();
+
+  while (timePrev - millis() < timeout) {
+    String ack = readFromBTBuffer();
+    if (ack.equals("<ACK>")) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /*
@@ -465,8 +500,9 @@ void addMarker(String * dataArray, int arraySize) {
   @return String - data prepended with checksum
 */
 String addCheckSum(String data) {
-  // TODO /*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/
-  // Uses CRC32 library
+  // Uses CRC8 CODE
+  //CRC-8 - based on the CRC8 formulas by Dallas/Maxim
+  //code released under the therms of the GNU GPL 3.0 license
 
   // convert data into byte representation
   uint8_t byteBuffer[data.length() + 1];
@@ -474,13 +510,29 @@ String addCheckSum(String data) {
   size_t numBytes = sizeof(byteBuffer) - 1;
 
   // calculate checksum
-  uint32_t checksum = CRC32::calculate(byteBuffer, numBytes);
-  
+  uint8_t checksum = CRC8(&byteBuffer[0], numBytes);
+
   // wrap checksum with markers
   // append checksum to data String
-  data = checksumStartMarker + String(checksum) + checksumEndMarker + data;
+  return (checksumStartMarker + String(checksum) + checksumEndMarker + data);
+}
 
-  return data;
+//CRC-8 - based on the CRC8 formulas by Dallas/Maxim
+//code released under the therms of the GNU GPL 3.0 license
+byte CRC8(const byte *data, byte len) {
+  byte crc = 0x00;
+  while (len--) {
+    byte extract = *data++;
+    for (byte tempI = 8; tempI; tempI--) {
+      byte sum = (crc ^ extract) & 0x01;
+      crc >>= 1;
+      if (sum) {
+        crc ^= 0x8C;
+      }
+      extract >>= 1;
+    }
+  }
+  return crc;
 }
 
 
@@ -498,16 +550,7 @@ String addCheckSum(String data) {
   @return boolean - false if there is no incomming tranmission
 */
 
-char recieveOneChar(){
-  char c = ' ';
-  if(Serial3.available()){
-    c=Serial3.read();
-  }
-  return c;
-}
-
 boolean receivedNewData() {
-  // TODO /*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/
   
   // failed to get communication from Bluetooth
   String dataFromBT = readFromBTBuffer();
@@ -568,6 +611,42 @@ boolean receivedNewData() {
     }
   }
   return storedTransmission;
+}
+
+/*
+  @desc
+  @param
+  @return
+*/
+void sendAcknowledge() {
+  Serial3.print("<ACK>");
+}
+
+/*
+  @desc
+  @param
+  @return
+*/
+void writeToVariables () {
+  /*
+     Uno
+     redCansError;
+     greenCansError;
+     blueCansError;
+  */
+
+  /*
+     Mega
+     canColours[3] = {r, g b}
+  */
+  if ((*storedTransmission).equals("INT")) {
+    int arraySize = 3 + 1;
+    redCansError = (*(storedTransmission + 1)).toInt();
+    greenCansError = (*(storedTransmission + 2)).toInt();
+    blueCansError = (*(storedTransmission + 3)).toInt();
+  }
+
+
 }
 
 /*
@@ -703,7 +782,7 @@ boolean confirmCheckSum(String data) {
   data.getBytes(byteBuffer, data.length() + 1);
   size_t numBytes = sizeof(byteBuffer) - 1;
 
-  uint32_t calculatedChecksum = CRC32::calculate(byteBuffer, numBytes);
+  uint8_t calculatedChecksum = CRC8(&byteBuffer[0], numBytes);
 
   // Compare the extracted checksum and the calculated checksum
   if (String(calculatedChecksum).equals(givenCheckSum)) {
