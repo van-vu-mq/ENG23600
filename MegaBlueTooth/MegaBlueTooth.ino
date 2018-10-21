@@ -6,7 +6,6 @@
 // https://www.arduino.cc/reference/en/language/functions/communication/serial/
 // Serial3 needs pins 15(RX) and 14(TX)
 
-#include <CRC32.h>
 
 #define connectionStatusPin      13
 
