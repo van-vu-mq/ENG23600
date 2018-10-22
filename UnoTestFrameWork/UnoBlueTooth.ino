@@ -4,6 +4,7 @@
 */
 
 #include <AltSoftSerial.h>
+AltSoftSerial BTSerial;
 
 #define connectionStatusPin 13
 
@@ -19,7 +20,8 @@
 #define checksumStartMarker '&'
 #define checksumEndMarker   '*'
 
-AltSoftSerial BTSerial;
+int transmitAttempts = 1;
+
 String MegaMAC = "";
 
 String *storedTransmission;
@@ -28,7 +30,9 @@ int storedSize = 0;
 // Change to false to reduce global variables
 boolean includeErrorMessage = false;
 boolean testingMessages = false;
+
 boolean receiveTesting = false;
+String receiveTestData = "<&131*!#INT$#1$#2$#3$@>";
 
 /************************************************************************************************************************/
 /************************/
@@ -294,7 +298,7 @@ boolean sendData(String copyData[], int arraySize) {
   packet = packetStartMarker + packet + packetEndMarker;
 
   // Write to BTSerial
-  int transmitAttempts = 1;
+
   for (int i = 0; i < transmitAttempts; i++) {
     transmitData(packet);
     if (receivedAcknowlegement()) {
@@ -595,8 +599,7 @@ String readFromBTBuffer() {
   // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   if (receiveTesting) {
     //temporary sample data
-    String testData = "<&1999750704*!#one$#two$#test$#234324$#453sdf3243$@>";
-    return testData;
+    return receiveTestData;
   }
   // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
