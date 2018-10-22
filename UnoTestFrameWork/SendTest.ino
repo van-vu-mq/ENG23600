@@ -31,7 +31,7 @@ void testAllOrders() {
 
 
 void sendCorruptData() {
-  int numOfFaults = randomValue(5); // how many times to insert simulated corruption into packet
+  int numOfFaults = randomValue(0, 5); // how many times to insert simulated corruption into packet
   int maxSizeOfFault = 5; // how many bytes the inserted corruption simulation should be
   int testSampleSize = 100;
 
@@ -47,9 +47,9 @@ void sendCorruptData() {
     int b = maxOneColour;
 
     while ( r + g + b > maxCan) {
-      r = randomValue(maxOneColour);
-      g = randomValue(maxOneColour);
-      b = randomValue(maxOneColour);
+      r = randomValue(0, maxOneColour);
+      g = randomValue(0, maxOneColour);
+      b = randomValue(0, maxOneColour);
     }
     sampleData[1] = r;
     sampleData[2] = g;
@@ -75,9 +75,9 @@ void sendCorruptData() {
     // add corruption
     // simulates interference, bad pin connections, poor signal etc
     for (int i = 0; i < numOfFaults; i++) {
-      int lengthOfFault = randomValue(maxSizeOfFault);
+      int lengthOfFault = randomValue(0, maxSizeOfFault);
       String randomData = randomString(lengthOfFault);
-      int posOfFault = randomValue(packet.length());
+      int posOfFault = randomValue(0, packet.length());
 
       // insert random data
       // left of pos + random data + right of pos

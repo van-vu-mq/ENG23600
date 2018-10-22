@@ -31,8 +31,8 @@ String randomString(int len) {
   return s;
 }
 
-int randomValue(int maxValue) {
+int randomValue(int minValue, int maxValue) {
   randomSeed(analogRead(0));
-  return (char)random(0, maxValue+1);
+  return (char)random(minValue, maxValue+1);
 }
 
