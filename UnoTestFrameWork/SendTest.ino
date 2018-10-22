@@ -1,6 +1,9 @@
 int maxCan = 10;
 int maxOneColour = 8;
 
+/*
+  Request bluetooth system to send every possible valid combination orders
+*/
 void testAllOrders() {
   int counter = 0;
   int testCount = 500;
@@ -30,6 +33,10 @@ void testAllOrders() {
 
 
 
+/*
+  Randomly generates a valid order and packet, then combined with random data and transmitted.
+  Simulates data corruption occuring after the packet has been sent out.
+*/
 void sendCorruptData() {
   int numOfFaults = randomValue(0, 5); // how many times to insert simulated corruption into packet
   int maxSizeOfFault = 5; // how many bytes the inserted corruption simulation should be
@@ -46,19 +53,22 @@ void sendCorruptData() {
     int g = maxOneColour;
     int b = maxOneColour;
 
+    // Ensure random sample is valid
     while ( r + g + b > maxCan) {
       r = randomValue(0, maxOneColour);
       g = randomValue(0, maxOneColour);
       b = randomValue(0, maxOneColour);
     }
+
+    // update sample
     sampleData[1] = r;
     sampleData[2] = g;
     sampleData[3] = b;
 
 
 
-    // Build packet for transmission as usual
-    // Assume that the function on the same board always works
+    // Build packet for transmission
+    // Assumes system always correctly builds data
 
     addMarker(&sampleData[0], arraySize);
 
@@ -72,11 +82,11 @@ void sendCorruptData() {
     packet = "<" + packet + ">";
 
 
-    // add corruption
-    // simulates interference, bad pin connections, poor signal etc
+    // add corruption simulation
     for (int i = 0; i < numOfFaults; i++) {
+      // generate random data and where to insert it
       int lengthOfFault = randomValue(0, maxSizeOfFault);
-      String randomData = randomString(lengthOfFault);
+      String randomData = randomStringOfAnyASCII(lengthOfFault);
       int posOfFault = randomValue(0, packet.length());
 
       // insert random data
@@ -91,10 +101,6 @@ void sendCorruptData() {
     transmitData(packet);
 
     sentCounter++;
-
   }
-
-
-
 }
 
