@@ -20,3 +20,19 @@ void printBTStatus () {
   }
 }
 
+
+String randomString(int len) {
+  randomSeed(analogRead(0));
+  String s = "";
+
+  for (int i=0; i< len; i++) {
+    s.concat((char)random(32, 127));
+  }
+  return s;
+}
+
+int randomValue(int maxValue) {
+  randomSeed(analogRead(0));
+  return (char)random(0, maxValue+1);
+}
+
