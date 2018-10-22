@@ -20,19 +20,37 @@ void printBTStatus () {
   }
 }
 
-
+/*
+  Generates a string of given length consisting only of alphanumeric characters
+*/
 String randomString(int len) {
   randomSeed(analogRead(0));
   String s = "";
 
-  for (int i=0; i< len; i++) {
+  for (int i = 0; i < len; i++) {
     s.concat((char)random(32, 127));
+  }
+  return s;
+}
+
+/*
+  Generates a string of given length consisting any character as defined by 
+  ASCII chart reference at:
+  https://www.arduino.cc/en/Reference/ASCIIchart 
+  https://en.cppreference.com/w/cpp/language/ascii
+*/
+String randomStringOfAnyASCII(int len) {
+  randomSeed(analogRead(0));
+  String s = "";
+
+  for (int i = 0; i < len; i++) {
+    s.concat((char)random(0, 128));
   }
   return s;
 }
 
 int randomValue(int minValue, int maxValue) {
   randomSeed(analogRead(0));
-  return (char)random(minValue, maxValue+1);
+  return (char)random(minValue, maxValue + 1);
 }
 
